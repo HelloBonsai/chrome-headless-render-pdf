@@ -32,6 +32,7 @@ class RenderPDF {
             paperHeight: def('paperHeight', undefined),
             includeBackground: def('includeBackground', undefined),
             pageRanges: def('pageRanges', undefined),
+            timeout: def('timeout', undefined)
         };
 
         this.commandLineOptions = {
@@ -85,43 +86,59 @@ class RenderPDF {
 
     async renderPdf(url, options) {
         return new Promise((resolve, reject) => {
-            CDP({host: this.host, port: this.port}, async (client) => {
-                try{
-                this.log(`Opening ${url}`);
-                const {Page, Emulation, LayerTree} = client;
-                await Page.enable();
-                await LayerTree.enable();
+            CDP({ host: this.host, port: this.port }, async (client) => {
+                try {
+                    let timeoutTimer;
+                    const { Page, Emulation, LayerTree } = client;
 
-                const loaded = this.cbToPromise(Page.loadEventFired);
-                const jsDone = this.cbToPromise(Emulation.virtualTimeBudgetExpired);
+                    this.log(`Opening ${url}`);
 
-                await Page.navigate({url});
-                await Emulation.setVirtualTimePolicy({policy: 'pauseIfNetworkFetchesPending', budget: 5000});
+                    await Page.enable();
+                    await LayerTree.enable();
 
-                await this.profileScope('Wait for load', async () => {
-                    await loaded;
-                });
+                    if (this.options.timeout) {
+                       const timeoutSeconds = parseInt(this.options.timeout);
+                        timeoutTimer = setTimeout(function () {
+                            reject(new Error('Timeout'));
+                        }, timeoutSeconds);
+                    }
 
-                await this.profileScope('Wait for js execution', async () => {
-                    await jsDone;
-                });
+                    const loaded = this.cbToPromise(Page.loadEventFired);
+                    const jsDone = this.cbToPromise(Emulation.virtualTimeBudgetExpired);
 
-                await this.profileScope('Wait for animations', async () => {
-                    await new Promise((resolve) => {
-                        setTimeout(resolve, 5000); // max waiting time
-                        let timeout = setTimeout(resolve, 100);
-                        LayerTree.layerPainted(() => {
-                            clearTimeout(timeout);
-                            timeout = setTimeout(resolve, 100);
+                    await Page.navigate({ url });
+                    await Emulation.setVirtualTimePolicy({ policy: 'pauseIfNetworkFetchesPending', budget: 5000 });
+
+                    await this.profileScope('Wait for load', async () => {
+                        await loaded;
+                    });
+
+                    await this.profileScope('Wait for js execution', async () => {
+                        await jsDone;
+                    });
+
+                    await this.profileScope('Wait for animations', async () => {
+                        await new Promise((resolve) => {
+                            setTimeout(resolve, 5000); // max waiting time
+                            let timeout = setTimeout(resolve, 100);
+                            LayerTree.layerPainted(() => {
+                                clearTimeout(timeout);
+                                timeout = setTimeout(resolve, 100);
+                            });
                         });
                     });
-                });
 
-                const pdf = await Page.printToPDF(options);
-                const buff = Buffer.from(pdf.data, 'base64');
-                client.close();
-                resolve(buff);
-                }catch (e) {
+                    const pdf = await Page.printToPDF(options);
+                    const buff = Buffer.from(pdf.data, 'base64');
+
+                    client.close();
+
+                    if (timeoutTimer) {
+                        clearTimeout(timeoutTimer);
+                    }
+
+                    resolve(buff);
+                } catch (e) {
                     reject(e.message)
                 }
             });
@@ -130,6 +147,7 @@ class RenderPDF {
 
     generatePdfOptions() {
         const options = {};
+
         if (this.options.landscape !== undefined) {
             options.landscape = !!this.options.landscape;
         }
@@ -173,7 +191,7 @@ class RenderPDF {
     }
 
     async cbToPromise(cb) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             cb((resp) => {
                 resolve(resp);
             })

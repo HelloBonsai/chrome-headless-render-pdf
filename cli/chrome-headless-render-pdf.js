@@ -8,7 +8,7 @@ try {
     pkg = require('../../package.json');
 }
 
-updateNotifier({pkg}).notify();
+updateNotifier({ pkg }).notify();
 
 const RenderPDF = require('../index');
 const argv = require('minimist')(process.argv.slice(2), {
@@ -22,7 +22,8 @@ const argv = require('minimist')(process.argv.slice(2), {
         'window-size',
         'paper-width',
         'paper-height',
-        'page-ranges'
+        'page-ranges',
+        'timeout'
     ],
     boolean: [
         'no-margins',
@@ -43,13 +44,12 @@ let windowSize;
 if (typeof argv['window-size'] === 'string') {
     windowSize = argv['window-size'].match(/^([0-9]+)[,x*]([0-9]+)$/);
     if (windowSize === null) {
-      console.error('ERROR: Missing or bad input for --window-size \n');
-      printHelp();
-      process.exit(1);
+        console.error('ERROR: Missing or bad input for --window-size \n');
+        printHelp();
+        process.exit(1);
     }
-    windowSize = windowSize.splice(1,3);
+    windowSize = windowSize.splice(1, 3);
 }
-
 
 if (pdfs.length !== urls.length) {
     console.error('ERROR: Unpaired --url or --pdf found\n');
@@ -64,9 +64,9 @@ if (typeof argv['chrome-binary'] === 'string') {
 
 let chromeOptions = undefined;
 if (Array.isArray(argv['chrome-option'])) {
-  chromeOptions = argv['chrome-option'];
+    chromeOptions = argv['chrome-option'];
 } else if (typeof argv['chrome-option'] === 'string') {
-  chromeOptions = [argv['chrome-option']];
+    chromeOptions = [argv['chrome-option']];
 }
 
 let [remoteHost, remotePort] = [undefined, undefined];
@@ -103,8 +103,13 @@ if (argv['include-background']) {
 }
 
 let pageRanges;
-if(typeof argv['page-ranges'] === 'string') {
+if (typeof argv['page-ranges'] === 'string') {
     pageRanges = argv['page-ranges'];
+}
+
+let timeout;
+if (typeof argv['timeout'] === 'string') {
+    timeout = argv['timeout'];
 }
 
 (async () => {
@@ -123,14 +128,15 @@ if(typeof argv['page-ranges'] === 'string') {
             paperWidth,
             paperHeight,
             pageRanges,
+            timeout
         });
     } catch (e) {
         console.error(e);
         process.exit(1);
     }
+
     process.exit();
 })();
-
 
 function generateJobList(urls, pdfs) {
     const jobs = [];
@@ -160,6 +166,7 @@ function printHelp() {
     console.log('    --paper-width            specify page width in inches (defaults to 8.5 inches)');
     console.log('    --paper-height           specify page height in inches (defaults to 11 inches)');
     console.log('    --page-ranges            specify pages to render default all pages,  e.g. 1-5, 8, 11-13');
+    console.log('    --timeout                sets the max time the process is going to wait before exiting in ms (e.g --timeout 10000)');
     console.log('');
     console.log('  Example:');
     console.log('    Render single pdf file');

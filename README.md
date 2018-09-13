@@ -1,7 +1,7 @@
-This tool require Google Chrome installed in version >59 to work, 
+This tool require Google Chrome installed in version >59 to work,
 but latest version is recommended.
 
-# Usage: 
+# Usage:
 ```
 chrome-headless-render-pdf [OPTIONS] --url=URL --pdf=OUTPUT-FILE [--url=URL2 --pdf=OUTPUT-FILE2] ...
   Options:
@@ -19,6 +19,7 @@ chrome-headless-render-pdf [OPTIONS] --url=URL --pdf=OUTPUT-FILE [--url=URL2 --p
     --paper-width            specify page width in inches (defaults to 8.5 inches)
     --paper-height           specify page height in inches (defaults to 11 inches)
     --page-ranges            specify pages to render default all pages,  e.g. 1-5, 8, 11-13
+    --timeout                sets the max time the process is going to wait before exiting in ms (e.g --timeout 10000)
 
   Example:
     Render single pdf file
@@ -58,6 +59,6 @@ RenderPDF.generateSinglePdf('http://google.com', 'outputPdf.pdf');
 ```
 
 # Motivation
-google-chrome currently have option to render pdf files when used with headless option. 
+google-chrome currently have option to render pdf files when used with headless option.
 But this option contains hardcoded adding header and footer to page rendering it unusable for pdf generation.
 This module allows to generate it without those elements.
