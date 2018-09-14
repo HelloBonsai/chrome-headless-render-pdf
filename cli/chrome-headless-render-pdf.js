@@ -1,14 +1,6 @@
 #!/usr/bin/env node
 
-const updateNotifier = require('update-notifier');
-let pkg;
-try {
-    pkg = require('../package.json');
-} catch (e) {
-    pkg = require('../../package.json');
-}
-
-updateNotifier({ pkg }).notify();
+console.log('Starting PDF rendering');
 
 const RenderPDF = require('../index');
 const argv = require('minimist')(process.argv.slice(2), {

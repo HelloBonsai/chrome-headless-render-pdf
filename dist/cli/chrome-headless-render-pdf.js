@@ -11,15 +11,7 @@ var _asyncToGenerator3 = _interopRequireDefault(_asyncToGenerator2);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var updateNotifier = require('update-notifier');
-var pkg = void 0;
-try {
-    pkg = require('../package.json');
-} catch (e) {
-    pkg = require('../../package.json');
-}
-
-updateNotifier({ pkg: pkg }).notify();
+console.log('Starting PDF rendering');
 
 var RenderPDF = require('../index');
 var argv = require('minimist')(process.argv.slice(2), {
