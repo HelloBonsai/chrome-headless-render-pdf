@@ -67,8 +67,7 @@ var RenderPDF = function () {
                 paperWidth: def('paperWidth', undefined),
                 paperHeight: def('paperHeight', undefined),
                 includeBackground: def('includeBackground', undefined),
-                pageRanges: def('pageRanges', undefined),
-                timeout: def('timeout', undefined)
+                pageRanges: def('pageRanges', undefined)
             };
 
             this.commandLineOptions = {
@@ -92,7 +91,7 @@ var RenderPDF = function () {
                                 return _context5.abrupt('return', new _promise2.default(function (resolve, reject) {
                                     CDP({ host: _this.host, port: _this.port }, function () {
                                         var _ref2 = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee4(client) {
-                                            var timeoutTimer, Page, Emulation, LayerTree, timeoutSeconds, loaded, jsDone, pdf, buff;
+                                            var timeoutTimer, Page, Emulation, LayerTree, loaded, jsDone, pdf, buff;
                                             return _regenerator2.default.wrap(function _callee4$(_context4) {
                                                 while (1) {
                                                     switch (_context4.prev = _context4.next) {
@@ -112,26 +111,17 @@ var RenderPDF = function () {
                                                             return LayerTree.enable();
 
                                                         case 8:
-
-                                                            if (_this.options.timeout) {
-                                                                timeoutSeconds = parseInt(_this.options.timeout);
-
-                                                                timeoutTimer = setTimeout(function () {
-                                                                    reject(new Error('Timeout'));
-                                                                }, timeoutSeconds);
-                                                            }
-
                                                             loaded = _this.cbToPromise(Page.loadEventFired);
                                                             jsDone = _this.cbToPromise(Emulation.virtualTimeBudgetExpired);
-                                                            _context4.next = 13;
+                                                            _context4.next = 12;
                                                             return Page.navigate({ url: url });
 
-                                                        case 13:
-                                                            _context4.next = 15;
+                                                        case 12:
+                                                            _context4.next = 14;
                                                             return Emulation.setVirtualTimePolicy({ policy: 'pauseIfNetworkFetchesPending', budget: 5000 });
 
-                                                        case 15:
-                                                            _context4.next = 17;
+                                                        case 14:
+                                                            _context4.next = 16;
                                                             return _this.profileScope('Wait for load', (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee() {
                                                                 return _regenerator2.default.wrap(function _callee$(_context) {
                                                                     while (1) {
@@ -148,8 +138,8 @@ var RenderPDF = function () {
                                                                 }, _callee, _this);
                                                             })));
 
-                                                        case 17:
-                                                            _context4.next = 19;
+                                                        case 16:
+                                                            _context4.next = 18;
                                                             return _this.profileScope('Wait for js execution', (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee2() {
                                                                 return _regenerator2.default.wrap(function _callee2$(_context2) {
                                                                     while (1) {
@@ -166,8 +156,8 @@ var RenderPDF = function () {
                                                                 }, _callee2, _this);
                                                             })));
 
-                                                        case 19:
-                                                            _context4.next = 21;
+                                                        case 18:
+                                                            _context4.next = 20;
                                                             return _this.profileScope('Wait for animations', (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee3() {
                                                                 return _regenerator2.default.wrap(function _callee3$(_context3) {
                                                                     while (1) {
@@ -191,37 +181,33 @@ var RenderPDF = function () {
                                                                 }, _callee3, _this);
                                                             })));
 
-                                                        case 21:
-                                                            _context4.next = 23;
+                                                        case 20:
+                                                            _context4.next = 22;
                                                             return Page.printToPDF(options);
 
-                                                        case 23:
+                                                        case 22:
                                                             pdf = _context4.sent;
                                                             buff = Buffer.from(pdf.data, 'base64');
 
 
                                                             client.close();
 
-                                                            if (timeoutTimer) {
-                                                                clearTimeout(timeoutTimer);
-                                                            }
-
                                                             resolve(buff);
-                                                            _context4.next = 33;
+                                                            _context4.next = 31;
                                                             break;
 
-                                                        case 30:
-                                                            _context4.prev = 30;
+                                                        case 28:
+                                                            _context4.prev = 28;
                                                             _context4.t0 = _context4['catch'](0);
 
                                                             reject(_context4.t0.message);
 
-                                                        case 33:
+                                                        case 31:
                                                         case 'end':
                                                             return _context4.stop();
                                                     }
                                                 }
-                                            }, _callee4, _this, [[0, 30]]);
+                                            }, _callee4, _this, [[0, 28]]);
                                         }));
 
                                         return function (_x3) {

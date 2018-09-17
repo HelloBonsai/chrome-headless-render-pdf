@@ -102,14 +102,23 @@ if (typeof argv['timeout'] === 'string') {
 }
 
 (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee() {
-    var jobs;
+    var timeoutTimer, jobs;
     return _regenerator2.default.wrap(function _callee$(_context) {
         while (1) {
             switch (_context.prev = _context.next) {
                 case 0:
                     _context.prev = 0;
+                    timeoutTimer = void 0;
+
+
+                    if (timeout) {
+                        timeoutTimer = setTimeout(function () {
+                            throw new Error('process timed out');
+                        }, parseInt(timeout));
+                    }
+
                     jobs = generateJobList(urls, pdfs);
-                    _context.next = 4;
+                    _context.next = 6;
                     return RenderPDF.generateMultiplePdf(jobs, {
                         printLogs: true,
                         landscape: landscape,
@@ -126,27 +135,31 @@ if (typeof argv['timeout'] === 'string') {
                         timeout: timeout
                     });
 
-                case 4:
-                    _context.next = 10;
+                case 6:
+
+                    if (timeoutTimer) {
+                        clearTimeout(timeoutTimer);
+                    }
+                    _context.next = 13;
                     break;
 
-                case 6:
-                    _context.prev = 6;
+                case 9:
+                    _context.prev = 9;
                     _context.t0 = _context['catch'](0);
 
                     console.error(_context.t0);
                     process.exit(1);
 
-                case 10:
+                case 13:
 
                     process.exit();
 
-                case 11:
+                case 14:
                 case 'end':
                     return _context.stop();
             }
         }
-    }, _callee, undefined, [[0, 6]]);
+    }, _callee, undefined, [[0, 9]]);
 }))();
 
 function generateJobList(urls, pdfs) {

@@ -31,8 +31,7 @@ class RenderPDF {
             paperWidth: def('paperWidth', undefined),
             paperHeight: def('paperHeight', undefined),
             includeBackground: def('includeBackground', undefined),
-            pageRanges: def('pageRanges', undefined),
-            timeout: def('timeout', undefined)
+            pageRanges: def('pageRanges', undefined)
         };
 
         this.commandLineOptions = {
@@ -96,13 +95,6 @@ class RenderPDF {
                     await Page.enable();
                     await LayerTree.enable();
 
-                    if (this.options.timeout) {
-                       const timeoutSeconds = parseInt(this.options.timeout);
-                        timeoutTimer = setTimeout(function () {
-                            reject(new Error('Timeout'));
-                        }, timeoutSeconds);
-                    }
-
                     const loaded = this.cbToPromise(Page.loadEventFired);
                     const jsDone = this.cbToPromise(Emulation.virtualTimeBudgetExpired);
 
@@ -132,10 +124,6 @@ class RenderPDF {
                     const buff = Buffer.from(pdf.data, 'base64');
 
                     client.close();
-
-                    if (timeoutTimer) {
-                        clearTimeout(timeoutTimer);
-                    }
 
                     resolve(buff);
                 } catch (e) {

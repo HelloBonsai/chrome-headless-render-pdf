@@ -106,6 +106,14 @@ if (typeof argv['timeout'] === 'string') {
 
 (async () => {
     try {
+        let timeoutTimer;
+
+        if (timeout) {
+            timeoutTimer = setTimeout(function() {
+                throw new Error('process timed out');
+            }, parseInt(timeout));
+        }
+
         const jobs = generateJobList(urls, pdfs);
         await RenderPDF.generateMultiplePdf(jobs, {
             printLogs: true,
@@ -122,6 +130,10 @@ if (typeof argv['timeout'] === 'string') {
             pageRanges,
             timeout
         });
+
+        if (timeoutTimer) {
+            clearTimeout(timeoutTimer);
+        }
     } catch (e) {
         console.error(e);
         process.exit(1);
