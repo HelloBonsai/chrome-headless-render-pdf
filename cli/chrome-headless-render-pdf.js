@@ -132,19 +132,19 @@ if (typeof argv['timeout'] === 'string') {
           fs.writeFileSync(job.pdf, buff);
           renderer.log(`Saved ${job.pdf}`);
         } catch (e) {
-          renderer.error('error:', e);
+          renderer.log('error:', e);
         }
       }
 
       renderer.killChrome();
       process.exit();
     }).catch((e) => {
-      console.error(e.message);
+      console.log(e.message);
       renderer.killChrome();
       process.exit(1);
     });
   }).catch((e) => {
-    console.error(e.message);
+    console.log(e.message);
     renderer.killChrome();
     process.exit(1);
   });

@@ -174,7 +174,7 @@ if (typeof argv['timeout'] === 'string') {
                                             _context.prev = 15;
                                             _context.t0 = _context['catch'](7);
 
-                                            renderer.error('error:', _context.t0);
+                                            renderer.log('error:', _context.t0);
 
                                         case 18:
                                             _iteratorNormalCompletion = true;
@@ -227,7 +227,7 @@ if (typeof argv['timeout'] === 'string') {
                                 }
                             }, _callee, _this, [[3, 23, 27, 35], [7, 15], [28,, 30, 34]]);
                         }))).catch(function (e) {
-                            console.error(e.message);
+                            console.log(e.message);
                             renderer.killChrome();
                             process.exit(1);
                         });
@@ -237,7 +237,7 @@ if (typeof argv['timeout'] === 'string') {
                     _context2.t1 = _context2.sent;
 
                     _context2.t2 = function (e) {
-                        console.error(e.message);
+                        console.log(e.message);
                         renderer.killChrome();
                         process.exit(1);
                     };
