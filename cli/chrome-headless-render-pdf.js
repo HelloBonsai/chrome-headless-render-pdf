@@ -2,6 +2,7 @@
 
 console.log('Starting PDF rendering');
 
+const fs = require('fs');
 const RenderPDF = require('../index');
 const argv = require('minimist')(process.argv.slice(2), {
     string: [
@@ -105,78 +106,86 @@ if (typeof argv['timeout'] === 'string') {
 }
 
 (async () => {
-    try {
-        let timeoutTimer;
+  const jobs = generateJobList(urls, pdfs);
+  const options = {
+    printLogs: true,
+    landscape,
+    noMargins,
+    includeBackground,
+    chromeBinary,
+    chromeOptions,
+    remoteHost,
+    remotePort,
+    windowSize,
+    paperWidth,
+    paperHeight,
+    pageRanges,
+    timeout
+  };
+  const renderer = new RenderPDF(options);
 
-        if (timeout) {
-            timeoutTimer = setTimeout(function() {
-                throw new Error('process timed out');
-            }, parseInt(timeout));
+  new Promise(await function (resolve, reject) {
+    renderer.connectToChrome().then(async () => {
+      for (const job of jobs) {
+        try {
+          const buff = await renderer.renderPdf(job.url, renderer.generatePdfOptions());
+          fs.writeFileSync(job.pdf, buff);
+          renderer.log(`Saved ${job.pdf}`);
+        } catch (e) {
+          renderer.error('error:', e);
         }
+      }
 
-        const jobs = generateJobList(urls, pdfs);
-        await RenderPDF.generateMultiplePdf(jobs, {
-            printLogs: true,
-            landscape,
-            noMargins,
-            includeBackground,
-            chromeBinary,
-            chromeOptions,
-            remoteHost,
-            remotePort,
-            windowSize,
-            paperWidth,
-            paperHeight,
-            pageRanges,
-            timeout
-        });
+      renderer.killChrome();
+      process.exit();
+    }).catch((e) => {
+      console.error(e.message);
+      renderer.killChrome();
+      process.exit(1);
+    });
+  }).catch((e) => {
+    console.error(e.message);
+    renderer.killChrome();
+    process.exit(1);
+  });
 
-        if (timeoutTimer) {
-            clearTimeout(timeoutTimer);
-        }
-    } catch (e) {
-        console.error(e);
-        process.exit(1);
-    }
-
-    process.exit();
 })();
 
 function generateJobList(urls, pdfs) {
-    const jobs = [];
-    for (let j = 0; j < urls.length; j++) {
-        jobs.push({
-            url: urls[j],
-            pdf: pdfs[j]
-        });
-    }
-    return jobs;
+  const jobs = [];
+  for (let j = 0; j < urls.length; j++) {
+    jobs.push({
+      url: urls[j],
+      pdf: pdfs[j]
+    });
+  }
+  return jobs;
 }
 
 function printHelp() {
-    console.log('chrome-headless-render-pdf [OPTIONS] --url=URL --pdf=OUTPUT-FILE [--url=URL2 --pdf=OUTPUT-FILE2] ...');
-    console.log('  Options:');
-    console.log('    --help                   this screen');
-    console.log('    --url                    url to load, for local files use: file:///path/to/file');
-    console.log('    --pdf                    output for generated file can be relative to current directory');
-    console.log('    --chrome-binary          set chrome location (use this options when autodetection fail)');
-    console.log('    --chrome-option          set chrome option, can be used multiple times, e.g. --chrome-option=--no-sandbox');
-    console.log('    --remote-host            set chrome host (for remote process)');
-    console.log('    --remote-port            set chrome port (for remote process)');
-    console.log('    --no-margins             disable default 1cm margins');
-    console.log('    --include-background     include elements background');
-    console.log('    --landscape              generate pdf in landscape orientation');
-    console.log('    --window-size            specify window size, width(,x*)height (e.g. --window-size 1600,1200 or --window-size 1600x1200)');
-    console.log('    --paper-width            specify page width in inches (defaults to 8.5 inches)');
-    console.log('    --paper-height           specify page height in inches (defaults to 11 inches)');
-    console.log('    --page-ranges            specify pages to render default all pages,  e.g. 1-5, 8, 11-13');
-    console.log('    --timeout                sets the max time the process is going to wait before exiting in ms (e.g --timeout 10000)');
-    console.log('');
-    console.log('  Example:');
-    console.log('    Render single pdf file');
-    console.log('      chrome-headless-render-pdf --url http://google.com --pdf test.pdf');
-    console.log('    Render pdf from local file');
-    console.log('      chrome-headless-render-pdf --url file:///tmp/example.html --pdf test.pdf');
-    console.log('    Render multiple pdf files');
-    console.log('      chrome-headless-render-pdf --url http://google.com --pdf test.pdf --url file:///tmp/example.html --pdf test.pdf');
+  console.log('chrome-headless-render-pdf [OPTIONS] --url=URL --pdf=OUTPUT-FILE [--url=URL2 --pdf=OUTPUT-FILE2] ...');
+  console.log('  Options:');
+  console.log('    --help                   this screen');
+  console.log('    --url                    url to load, for local files use: file:///path/to/file');
+  console.log('    --pdf                    output for generated file can be relative to current directory');
+  console.log('    --chrome-binary          set chrome location (use this options when autodetection fail)');
+  console.log('    --chrome-option          set chrome option, can be used multiple times, e.g. --chrome-option=--no-sandbox');
+  console.log('    --remote-host            set chrome host (for remote process)');
+  console.log('    --remote-port            set chrome port (for remote process)');
+  console.log('    --no-margins             disable default 1cm margins');
+  console.log('    --include-background     include elements background');
+  console.log('    --landscape              generate pdf in landscape orientation');
+  console.log('    --window-size            specify window size, width(,x*)height (e.g. --window-size 1600,1200 or --window-size 1600x1200)');
+  console.log('    --paper-width            specify page width in inches (defaults to 8.5 inches)');
+  console.log('    --paper-height           specify page height in inches (defaults to 11 inches)');
+  console.log('    --page-ranges            specify pages to render default all pages,  e.g. 1-5, 8, 11-13');
+  console.log('    --timeout                sets the max time the process is going to wait before exiting in ms (e.g --timeout 10000)');
+  console.log('');
+  console.log('  Example:');
+  console.log('    Render single pdf file');
+  console.log('      chrome-headless-render-pdf --url http://google.com --pdf test.pdf');
+  console.log('    Render pdf from local file');
+  console.log('      chrome-headless-render-pdf --url file:///tmp/example.html --pdf test.pdf');
+  console.log('    Render multiple pdf files');
+  console.log('      chrome-headless-render-pdf --url http://google.com --pdf test.pdf --url file:///tmp/example.html --pdf test.pdf');
 }
